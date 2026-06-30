@@ -19,7 +19,7 @@ const RAW_PLAYERS = [
 ["Federico Valverde","S","Defender",88,99,93,98,97],
 ["Bukayo Saka","S","Goalkeeper",20,99,88,98,97],
 ["Robert Lewandowski","S","Finisher",99,68,96,98,97],
-["Achraf Hakimi","S","Playmaker",93,88,99,97,98],
+["Michael Olise","S","Playmaker",93,88,99,97,98],
 ["Virgil van Dijk","S","Box-to-Box",95,96,95,98,99],
 ["Alisson Becker","S","Defender",88,99,93,98,97],
 ["Thibaut Courtois","S","Goalkeeper",20,99,88,98,97],
@@ -114,32 +114,34 @@ const ROLE_TO_POS = {
 };
 
 const CLUB_NAMES = [
-  "Albion Forge FC",       // Inggris
-  "Rheingold Eisen SV",    // Jerman
-  "Sakura Tora FC",        // Jepang
-  "Olympios Keravnos",     // Yunani
-  "Lumière du Nord FC",    // Prancis
-  "Estrella del Sur CF",   // Spanyol
-  "Aquila Rossonera",      // Italia
-  "Estrela Negra EC",      // Brasil/Portugal
-  "Boreal Falcons SC",     // Skandinavia
-  "Vatra Carpați FC",      // Eropa Timur
-  "Maple Crest United",    // Kanada
-  "Outback Thunder FC",    // Australia
-  "Anatolia Yıldız SK",    // Turki
-  "Atlas Sahara FC",       // Maroko/Afrika Utara
-  "Savannah Lions SC",     // Afrika
-  "Lotus Mekong FC",       // Asia Tenggara
-  "Himalaya Eagles FC",    // Asia Selatan
-  "Aurora Polar SC",       // Rusia/Nordik
-  "Pampas Cóndor CF",      // Argentina
-  "Jade Dragon FC"         // Tiongkok
+  "Juventus",       
+  "Manchaster United",    
+  "Paris Saint-Germain",        
+  "Bayern Leverkusen",     
+  "Real Madrid",    
+  "Barcelona",   
+  "Arsenal",      
+  "Bayern Munchen",      
+  "Aston Villa",     
+  "Totenham Hotspur",      
+  "Chelsea",    
+  "Inter Milan",    
+  "Atletico Madrid",    
+  "Liverpool",       
+  "Manchester City",     
+  "Ajax",       
+  "Ac Milan",   
+  "Borussia Dortmund",      
+  "Benfica",      
+  "Galatasaray"         
 ];
 
+// sesuai dengan jesrey club asli
 const CLUB_COLORS = [
-  "#e63946","#1d3557","#2a9d8f","#e9c46a","#6a4c93","#ef476f","#118ab2","#073b4c",
-  "#ff6b35","#3a86ff","#8338ec","#06d6a0","#ffbe0b","#fb5607","#264653","#9b5de5",
-  "#00b4d8","#f15bb5","#43aa8b","#577590"
+  "#000000", "#DA291C", "#004170", "#E2001A", "#FEBE10",
+  "#A50044", "#EF0107", "#DC052D", "#95BFE5", "#132257",
+  "#034694", "#0047AB", "#A50044", "#C8102E", "#6CABDD",
+  "#AE1C28", "#F7E018", "#FDE100", "#FF0000", "#A32638"
 ];
 
 function buildClubsAndPlayers() {

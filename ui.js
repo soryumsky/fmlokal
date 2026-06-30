@@ -107,7 +107,7 @@ const UI = {
   renderLeague(state) {
     const standings = getStandings(state.clubs);
     const rows = standings.map((c, i) => `
-      <tr class="${c.id === state.userClubId ? "user-club" : ""}">
+      <tr class="club-row ${c.id === state.userClubId ? "user-club" : ""}" data-club-detail="${c.id}">
         <td class="rank">${i + 1}</td>
         <td class="team-name">${c.name}</td>
         <td>${c.played}</td>
@@ -149,6 +149,39 @@ const UI = {
         <div class="award-row"><span class="award-label">Top Assist</span><span>${topAssist.name} (${topAssist.assist})</span></div>
         <div class="award-row"><span class="award-label">Ballon d'Or</span><span>${ballonDor.name}</span></div>
         <div class="award-row"><span class="award-label">Memimpin Klasemen</span><span>${champion.name}</span></div>
+      </div>
+    `;
+  },
+
+  renderClubModal(state, clubId) {
+    const club = this.clubById(state, clubId);
+    if (!club) return "";
+    const players = this.playersByClub(state, clubId);
+    const order = { GK: 0, DEF: 1, MID: 2, ATT: 3 };
+    const sorted = [...players].sort((a, b) => order[a.pos] - order[b.pos]);
+    const rows = sorted.map(p => `
+      <div class="player-row">
+        <div>
+          <div class="player-name">${p.name} <span class="badge ${p.class}">${p.class}</span></div>
+          <div class="player-role">${p.role} &middot; ${p.pos}</div>
+        </div>
+        <div class="player-stats">⚽${p.goal} 🅰️${p.assist} ⭐${avgRating(p).toFixed(1)}</div>
+      </div>
+    `).join("");
+    return `
+      <div class="modal-overlay" data-close-modal="1">
+        <div class="modal-box" data-stop-propagation="1">
+          <div class="modal-header">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span class="dot" style="background:${club.color};width:14px;height:14px;"></span>
+              <b style="font-size:16px;">${club.name}</b>
+            </div>
+            <button class="modal-close" data-close-modal="1">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="card">${rows}</div>
+          </div>
+        </div>
       </div>
     `;
   },

@@ -3,6 +3,7 @@
 let state = null;
 let currentTab = "home";
 let squadTab = "club";
+let openClubId = null;
 
 function newGameState() {
   const { clubs, players } = buildClubsAndPlayers();
@@ -42,7 +43,8 @@ function render() {
   else if (currentTab === "squad") body = UI.renderSquad(state, squadTab);
   else if (currentTab === "history") body = UI.renderHistory(state);
 
-  app.innerHTML = UI.renderTopbar(state) + `<main>${body}</main>` + UI.renderBottomNav(currentTab);
+  app.innerHTML = UI.renderTopbar(state) + `<main>${body}</main>` + UI.renderBottomNav(currentTab)
+    + (openClubId ? UI.renderClubModal(state, openClubId) : "");
   bindMainEvents();
 }
 
@@ -77,6 +79,25 @@ function bindMainEvents() {
       render();
     });
   });
+
+  document.querySelectorAll("[data-club-detail]").forEach(elm => {
+    elm.addEventListener("click", () => {
+      openClubId = elm.dataset.clubDetail;
+      render();
+    });
+  });
+
+  document.querySelectorAll("[data-close-modal]").forEach(elm => {
+    elm.addEventListener("click", () => {
+      openClubId = null;
+      render();
+    });
+  });
+
+  const modalBox = document.querySelector(".modal-box");
+  if (modalBox) {
+    modalBox.addEventListener("click", (e) => e.stopPropagation());
+  }
 }
 
 function simulateMatchday() {
