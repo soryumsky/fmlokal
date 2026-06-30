@@ -43,11 +43,11 @@ function getAwards(players, clubs) {
   const eligiblePlayers = players.filter(p => p.match >= 5);
   const bySlot = {
     GK: [...eligiblePlayers.filter(p => p.pos === "GK")].sort((a, b) => avgRating(b) - avgRating(a)).slice(0, 1),
-    DEF: [...eligiblePlayers.filter(p => p.pos === "DEF")].sort((a, b) => avgRating(b) - avgRating(a)).slice(0, 4),
-    MID: [...eligiblePlayers.filter(p => p.pos === "MID")].sort((a, b) => avgRating(b) - avgRating(a)).slice(0, 4),
-    ATT: [...eligiblePlayers.filter(p => p.pos === "ATT")].sort((a, b) => avgRating(b) - avgRating(a)).slice(0, 2),
+    DEF: [...eligiblePlayers.filter(p => p.pos === "DEF")].sort((a, b) => avgRating(b) - avgRating(a)).slice(0, 1),
+    MID: [...eligiblePlayers.filter(p => p.pos === "MID")].sort((a, b) => avgRating(b) - avgRating(a)).slice(0, 2),
+    ATT: [...eligiblePlayers.filter(p => p.pos === "ATT")].sort((a, b) => avgRating(b) - avgRating(a)).slice(0, 1),
   };
-  const teamOfSeason = [...bySlot.GK, ...bySlot.DEF, ...bySlot.MID, ...bySlot.ATT];
+  const teamOfSeason = [...bySlot.ATT, ...bySlot.MID, ...bySlot.DEF, ...bySlot.GK];
 
   return {
     champion: champion ? champion.id : null,

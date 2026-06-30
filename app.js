@@ -4,6 +4,7 @@ let state = null;
 let currentTab = "home";
 let squadTab = "club";
 let openClubId = null;
+let showTots = false;
 
 function newGameState() {
   const { clubs, players } = buildClubsAndPlayers();
@@ -44,7 +45,8 @@ function render() {
   else if (currentTab === "history") body = UI.renderHistory(state);
 
   app.innerHTML = UI.renderTopbar(state) + `<main>${body}</main>` + UI.renderBottomNav(currentTab)
-    + (openClubId ? UI.renderClubModal(state, openClubId) : "");
+    + (openClubId ? UI.renderClubModal(state, openClubId) : "")
+    + (showTots ? UI.renderTotsModal(state) : "");
   bindMainEvents();
 }
 
@@ -87,9 +89,17 @@ function bindMainEvents() {
     });
   });
 
+  document.querySelectorAll("[data-open-tots]").forEach(elm => {
+    elm.addEventListener("click", () => {
+      showTots = true;
+      render();
+    });
+  });
+
   document.querySelectorAll("[data-close-modal]").forEach(elm => {
     elm.addEventListener("click", () => {
       openClubId = null;
+      showTots = false;
       render();
     });
   });

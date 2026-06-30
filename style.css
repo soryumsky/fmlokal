@@ -254,6 +254,9 @@ tbody tr { border-top: 1px solid var(--border); }
 }
 .award-row:first-child { border-top: none; }
 .award-label { color: var(--text-dim); }
+.award-row-clickable { cursor: pointer; color: var(--accent); }
+.award-row-clickable span:last-child { color: var(--accent); font-weight: 600; }
+.award-row-clickable:active { opacity: 0.7; }
 
 .toast {
   position: fixed;

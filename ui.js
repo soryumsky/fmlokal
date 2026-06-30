@@ -142,6 +142,7 @@ const UI = {
     const topAssist = p(awards.topAssist);
     const ballonDor = p(awards.ballonDor);
     const champion = c(awards.champion);
+    const totsReady = awards.teamOfSeason.length === 5;
     return `
       <h2 class="section-title">Penghargaan Sementara</h2>
       <div class="card">
@@ -149,6 +150,45 @@ const UI = {
         <div class="award-row"><span class="award-label">Top Assist</span><span>${topAssist.name} (${topAssist.assist})</span></div>
         <div class="award-row"><span class="award-label">Ballon d'Or</span><span>${ballonDor.name}</span></div>
         <div class="award-row"><span class="award-label">Memimpin Klasemen</span><span>${champion.name}</span></div>
+        ${totsReady ? `
+          <div class="award-row award-row-clickable" data-open-tots="1">
+            <span class="award-label">Team Of The Season</span>
+            <span>Lihat Tim &rsaquo;</span>
+          </div>
+        ` : `
+          <div class="award-row"><span class="award-label">Team Of The Season</span><span style="color:var(--text-dim);">Belum tersedia</span></div>
+        `}
+      </div>
+    `;
+  },
+
+  renderTotsModal(state) {
+    const awards = getAwards(state.players, state.clubs);
+    const p = id => state.players.find(pl => pl.id === id);
+    const tots = awards.teamOfSeason.map(p).filter(Boolean);
+    if (!tots.length) return "";
+    const order = { ATT: 0, MID: 1, DEF: 2, GK: 3 };
+    const sorted = [...tots].sort((a, b) => order[a.pos] - order[b.pos]);
+    const rows = sorted.map(pl => `
+      <div class="player-row">
+        <div>
+          <div class="player-name">${pl.name} <span class="badge ${pl.class}">${pl.class}</span></div>
+          <div class="player-role">${pl.role} &middot; ${pl.pos} &middot; ${this.clubById(state, pl.clubId).name}</div>
+        </div>
+        <div class="player-stats">⭐${avgRating(pl).toFixed(1)}</div>
+      </div>
+    `).join("");
+    return `
+      <div class="modal-overlay" data-close-modal="1">
+        <div class="modal-box">
+          <div class="modal-header">
+            <b style="font-size:16px;">Team Of The Season</b>
+            <button class="modal-close" data-close-modal="1">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="card">${rows}</div>
+          </div>
+        </div>
       </div>
     `;
   },
