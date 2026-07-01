@@ -28,6 +28,32 @@ function getStandings(clubs) {
   });
 }
 
+// Rekap trophy (Liga & CUP) tiap klub berdasarkan riwayat musim (state.history).
+// Dipakai untuk tab "Trophy Room". Diurutkan berdasarkan total trophy terbanyak.
+function getClubTrophies(state) {
+  const rows = state.clubs.map(c => ({
+    id: c.id, name: c.name, color: c.color, league: 0, cup: 0
+  }));
+  const byName = {};
+  rows.forEach(r => { byName[r.name] = r; });
+
+  (state.history || []).forEach(h => {
+    if (h.championName && byName[h.championName]) byName[h.championName].league++;
+    if (h.cupChampionName && h.cupChampionName !== "-" && byName[h.cupChampionName]) {
+      byName[h.cupChampionName].cup++;
+    }
+  });
+
+  rows.forEach(r => { r.total = r.league + r.cup; });
+
+  return rows.sort((a, b) => {
+    if (b.total !== a.total) return b.total - a.total;
+    if (b.league !== a.league) return b.league - a.league;
+    if (b.cup !== a.cup) return b.cup - a.cup;
+    return a.name.localeCompare(b.name);
+  });
+}
+
 // Form guide: hasil N pertandingan terakhir sebuah klub, urut dari terlama ke terbaru.
 // Return array berisi 'W' | 'D' | 'L'.
 function getClubForm(clubId, fixtures, n) {

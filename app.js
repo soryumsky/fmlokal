@@ -57,6 +57,7 @@ function render() {
   else if (currentTab === "cup") body = UI.renderCup(state);
   else if (currentTab === "match") body = UI.renderMatch(state);
   else if (currentTab === "squad") body = UI.renderSquad(state, squadTab);
+  else if (currentTab === "trophies") body = UI.renderTrophies(state);
   else if (currentTab === "history") body = UI.renderHistory(state);
 
   app.innerHTML = UI.renderTopbar(state) + `<main>${body}</main>` + UI.renderBottomNav(currentTab)
@@ -239,6 +240,7 @@ function simulateToNextUserMatch() {
 function finishSeason() {
   // Simpan urutan klasemen akhir musim ini sebagai dasar seeding CUP musim depan.
   const standingsOrder = getStandings(state.clubs).map(c => c.id);
+  const userLeagueRank = standingsOrder.indexOf(state.userClubId) + 1;
 
   const awards = getAwards(state.players, state.clubs, state.cup);
   const cupAwards = getCupAwards(state);
@@ -255,6 +257,9 @@ function finishSeason() {
 
   state.history.push({
     season: state.season,
+    userClubName: c(state.userClubId).name,
+    userLeagueRank: userLeagueRank,
+    totalClubs: state.clubs.length,
     championName: champion.name,
     goldenBootName: goldenBoot.name,
     goldenBootGoals: goldenBoot.goal,

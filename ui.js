@@ -384,9 +384,13 @@ const UI = {
     if (!state.history.length) {
       return `<div class="empty-state">Belum ada riwayat musim.<br>Selesaikan musim pertamamu untuk melihat hasilnya di sini.</div>`;
     }
-    const rows = state.history.slice().reverse().map(h => `
+    const rows = state.history.slice().reverse().map(h => {
+      const rankTxt = h.userLeagueRank ? `#${h.userLeagueRank}${h.totalClubs ? ` / ${h.totalClubs}` : ""}` : "-";
+      const isChampion = h.userLeagueRank === 1;
+      return `
       <div class="card">
         <h2 class="section-title" style="margin-top:0;">Musim ${h.season}</h2>
+        <div class="award-row"><span class="award-label">Posisi Anda${h.userClubName ? ` (${h.userClubName})` : ""}</span><span>${isChampion ? "🏆 " : ""}${rankTxt}</span></div>
         <div class="award-row"><span class="award-label">Juara Liga</span><span>${h.championName}</span></div>
         <div class="award-row"><span class="award-label">Top Skor</span><span>${h.goldenBootName} (${h.goldenBootGoals})</span></div>
         <div class="award-row"><span class="award-label">Top Assist</span><span>${h.topAssistName} (${h.topAssistAssists})</span></div>
@@ -398,8 +402,35 @@ const UI = {
           <div class="award-row"><span class="award-label">Top Assist CUP</span><span>${h.cupTopAssistName}${h.cupTopAssistAssists ? ` (${h.cupTopAssistAssists})` : ""}</span></div>
         ` : ""}
       </div>
-    `).join("");
+    `;
+    }).join("");
     return `<h2 class="section-title" style="margin-top:14px;">Riwayat Musim</h2>${rows}`;
+  },
+
+  renderTrophies(state) {
+    const rows = getClubTrophies(state);
+    if (!state.history.length) {
+      return `<h2 class="section-title" style="margin-top:14px;">Trophy Room</h2>
+        <div class="empty-state">Belum ada trophy yang dimenangkan.<br>Selesaikan musim pertamamu untuk mulai mengumpulkan trophy.</div>`;
+    }
+    const body = rows.map((r, i) => `
+      <tr class="club-row ${r.id === state.userClubId ? "user-club" : ""}" data-club-detail="${r.id}">
+        <td class="rank">${i + 1}</td>
+        <td class="team-name"><span class="dot" style="background:${r.color}"></span>${r.name}</td>
+        <td>${r.league}</td>
+        <td>${r.cup}</td>
+        <td><b>${r.total}</b></td>
+      </tr>
+    `).join("");
+    return `
+      <h2 class="section-title" style="margin-top:14px;">Trophy Room</h2>
+      <div class="card" style="overflow-x:auto;">
+        <table>
+          <tr><th></th><th style="text-align:left;">Klub</th><th>Liga</th><th>CUP</th><th>Total</th></tr>
+          ${body}
+        </table>
+      </div>
+    `;
   },
 
   renderCupMatchRow(state, m) {
@@ -497,6 +528,7 @@ const UI = {
       ["cup", "🥇", "CUP"],
       ["match", "⚽", "Match"],
       ["squad", "👥", "Squad"],
+      ["trophies", "🏅", "Trophy"],
       ["history", "🏆", "History"],
     ];
     return `<div class="bottom-nav">
