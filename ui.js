@@ -136,7 +136,7 @@ const UI = {
     const standings = getStandings(state.clubs);
     const rows = standings.map((c, i) => {
       const rank = i + 1;
-      const zoneClass = rank <= 4 ? "zone-ucl" : rank >= standings.length - 2 ? "zone-releg" : "";
+      const zoneClass = rank <= 15 ? "zone-ucl" : rank <= 19 ? "zone-releg" : "";
       return `
       <tr class="club-row ${zoneClass} ${c.id === state.userClubId ? "user-club" : ""}" data-club-detail="${c.id}">
         <td class="rank">${rank}</td>
@@ -161,8 +161,8 @@ const UI = {
           ${rows}
         </table>
         <div class="legend-row">
-          <span><span class="legend-dot zone-ucl"></span>Zona Juara/UCL</span>
-          <span><span class="legend-dot zone-releg"></span>Zona Degradasi</span>
+          <span><span class="legend-dot zone-ucl"></span>Zona CUP</span>
+          <span><span class="legend-dot zone-releg"></span>Zona Playoff</span>
         </div>
       </div>
       ${this.renderAwardsSection(state)}
