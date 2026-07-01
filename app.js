@@ -255,7 +255,13 @@ function finishSeason() {
   const cupTopScorer = cupAwards.cupTopScorer ? p(cupAwards.cupTopScorer) : null;
   const cupTopAssist = cupAwards.cupTopAssist ? p(cupAwards.cupTopAssist) : null;
 
+  // Bonus juara: +1 atribut kunci untuk semua pemain klub juara Liga &
+  // klub juara CUP. Kalau klub yang sama juara keduanya, tetap +1 saja
+  // (applyTitleBonus men-dedupe clubId-nya).
+  applyTitleBonus(state.players, [champion.id, cupChampion ? cupChampion.id : null]);
+
   state.history.push({
+
     season: state.season,
     userClubName: c(state.userClubId).name,
     userLeagueRank: userLeagueRank,

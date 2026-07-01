@@ -138,7 +138,10 @@ function applyCupMatchResultToPlayers(players, result, homeIds, awayIds) {
     if (!p) return;
     p.cupMatch = (p.cupMatch || 0) + 1;
     const r = result.ratings[id];
-    if (r !== undefined) p.cupRatingSum = (p.cupRatingSum || 0) + r;
+    if (r !== undefined) {
+      p.cupRatingSum = (p.cupRatingSum || 0) + r;
+      developPlayerFromRating(p, r);
+    }
   });
 
   result.events.forEach(ev => {

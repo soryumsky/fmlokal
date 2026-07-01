@@ -24,6 +24,12 @@ const UI = {
   clubById(state, id) { return state.clubs.find(c => c.id === id); },
   playersByClub(state, id) { return state.players.filter(p => p.clubId === id); },
 
+  // Tampilkan ringkas 3 atribut kunci pemain, mis. "ATK 84.3 · CRE 90.1 · MEN 88.0"
+  keyAttrsText(p) {
+    return keyAttrsOf(p).map(k => `${KEY_ATTR_LABEL[k]} ${p[k].toFixed(1)}`).join(" · ");
+  },
+
+
   renderFormBadges(clubId, fixtures, n) {
     const form = getClubForm(clubId, fixtures, n || 5);
     if (!form.length) return `<span class="form-empty">-</span>`;
@@ -241,6 +247,7 @@ const UI = {
         <div>
           <div class="player-name">${p.name} <span class="badge ${p.class}">${p.class}</span></div>
           <div class="player-role">${p.role} &middot; ${p.pos}</div>
+          <div class="player-role" style="font-size:11px;">KEY OVR ${keyOverallOf(p).toFixed(1)} &middot; ${this.keyAttrsText(p)}</div>
         </div>
         <div class="player-stats">⚽${p.goal} 🅰️${p.assist} ⭐${avgRating(p).toFixed(1)}</div>
       </div>
@@ -371,6 +378,7 @@ const UI = {
         <div>
           <div class="player-name">${p.name} <span class="badge ${p.class}">${p.class}</span></div>
           <div class="player-role">${p.role} &middot; ${p.pos}</div>
+          <div class="player-role" style="font-size:11px;">KEY OVR ${keyOverallOf(p).toFixed(1)} &middot; ${this.keyAttrsText(p)}</div>
         </div>
         <div class="player-stats">⚽${p.goal} 🅰️${p.assist} ⭐${avgRating(p).toFixed(1)}</div>
       </div>
