@@ -24,6 +24,12 @@ const UI = {
   clubById(state, id) { return state.clubs.find(c => c.id === id); },
   playersByClub(state, id) { return state.players.filter(p => p.clubId === id); },
 
+  renderFormBadges(clubId, fixtures, n) {
+    const form = getClubForm(clubId, fixtures, n || 5);
+    if (!form.length) return `<span class="form-empty">-</span>`;
+    return `<span class="form-badges">${form.map(r => `<span class="form-dot form-${r}">${r}</span>`).join("")}</span>`;
+  },
+
   renderTopbar(state) {
     return `<div class="topbar">
       <div class="brand">FMLOKAL</div>
@@ -32,12 +38,16 @@ const UI = {
   },
 
   renderOnboarding(state) {
-    const grid = state.clubs.map(c => `
+    const grid = state.clubs.map(c => {
+      const ovr = clubOverall(state.players, c.id);
+      return `
       <div class="club-pick" data-club="${c.id}">
         <div class="swatch" style="background:${c.color}"></div>
-        ${c.name}
+        <div class="club-pick-name">${c.name}</div>
+        <div class="club-pick-ovr">OVR ${ovr}</div>
       </div>
-    `).join("");
+    `;
+    }).join("");
     return `
       <div style="padding-top:30px;text-align:center;">
         <div class="brand" style="font-size:26px;color:var(--accent);font-weight:800;">FMLOKAL</div>
@@ -51,9 +61,11 @@ const UI = {
     const club = this.clubById(state, state.userClubId);
     const standings = getStandings(state.clubs);
     const userRank = standings.findIndex(c => c.id === club.id) + 1;
+    const leader = standings[0];
     const nextFixture = state.fixtures.find(f => !f.played && (f.homeId === club.id || f.awayId === club.id));
     const allCurrentPlayed = state.fixtures.filter(f => f.matchday === state.matchday).every(f => f.played);
     const seasonDone = state.matchday > 38;
+    const progressPct = Math.min(100, Math.round((Math.min(state.matchday, 38) - 1) / 38 * 100));
 
     let fixtureHtml = "";
     if (nextFixture) {
@@ -70,13 +82,26 @@ const UI = {
         </div>`;
     }
 
+    const gapToLeader = leader && leader.id !== club.id ? leader.pts - club.pts : 0;
+
     return `
       <div class="card" style="display:flex;align-items:center;gap:12px;">
         <div class="swatch" style="width:40px;height:40px;border-radius:50%;background:${club.color};flex-shrink:0;"></div>
-        <div>
+        <div style="flex:1;">
           <div style="font-weight:800;font-size:16px;">${club.name}</div>
-          <div style="color:var(--text-dim);font-size:12px;">Peringkat #${userRank} &middot; ${club.pts} poin</div>
+          <div style="color:var(--text-dim);font-size:12px;">
+            Peringkat #${userRank} &middot; ${club.pts} poin
+            ${leader && leader.id !== club.id ? ` &middot; -${gapToLeader} dari puncak` : ` &middot; Memimpin klasemen!`}
+          </div>
+          <div style="margin-top:6px;">${this.renderFormBadges(club.id, state.fixtures, 5)}</div>
         </div>
+      </div>
+
+      <div class="card" style="padding:12px 14px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-dim);margin-bottom:6px;">
+          <span>Progres Musim</span><span>${Math.min(state.matchday, 38)}/38</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" style="width:${progressPct}%"></div></div>
       </div>
 
       ${fixtureHtml}
@@ -85,8 +110,11 @@ const UI = {
         <h2 class="section-title" style="margin-top:0">Aksi Musim</h2>
         ${seasonDone
           ? `<button class="btn" id="btn-finish-season">Lihat Hasil Akhir Musim</button>`
-          : `<button class="btn" id="btn-sim-matchday" ${allCurrentPlayed ? "" : ""}>
+          : `<button class="btn" id="btn-sim-matchday">
               ${allCurrentPlayed ? "Lanjut ke Matchday Berikutnya" : "Simulasikan Matchday Ini"}
+            </button>
+            <button class="btn secondary" id="btn-sim-to-next" style="margin-top:8px;">
+              &raquo; Simulasikan Sampai Laga Saya Berikutnya
             </button>`
         }
       </div>
@@ -106,9 +134,12 @@ const UI = {
 
   renderLeague(state) {
     const standings = getStandings(state.clubs);
-    const rows = standings.map((c, i) => `
-      <tr class="club-row ${c.id === state.userClubId ? "user-club" : ""}" data-club-detail="${c.id}">
-        <td class="rank">${i + 1}</td>
+    const rows = standings.map((c, i) => {
+      const rank = i + 1;
+      const zoneClass = rank <= 4 ? "zone-ucl" : rank >= standings.length - 2 ? "zone-releg" : "";
+      return `
+      <tr class="club-row ${zoneClass} ${c.id === state.userClubId ? "user-club" : ""}" data-club-detail="${c.id}">
+        <td class="rank">${rank}</td>
         <td class="team-name">${c.name}</td>
         <td>${c.played}</td>
         <td>${c.win}</td>
@@ -118,15 +149,21 @@ const UI = {
         <td>${c.ga}</td>
         <td>${c.gf - c.ga >= 0 ? "+" : ""}${c.gf - c.ga}</td>
         <td><b>${c.pts}</b></td>
+        <td>${this.renderFormBadges(c.id, state.fixtures, 5)}</td>
       </tr>
-    `).join("");
+    `;
+    }).join("");
     return `
       <h2 class="section-title" style="margin-top:14px;">Klasemen Liga</h2>
       <div class="card" style="overflow-x:auto;">
         <table>
-          <tr><th></th><th style="text-align:left;">Klub</th><th>M</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>SG</th><th>Pts</th></tr>
+          <tr><th></th><th style="text-align:left;">Klub</th><th>M</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>SG</th><th>Pts</th><th>Form</th></tr>
           ${rows}
         </table>
+        <div class="legend-row">
+          <span><span class="legend-dot zone-ucl"></span>Zona Juara/UCL</span>
+          <span><span class="legend-dot zone-releg"></span>Zona Degradasi</span>
+        </div>
       </div>
       ${this.renderAwardsSection(state)}
     `;
@@ -234,14 +271,37 @@ const UI = {
     const home = this.clubById(state, lastResult.homeId);
     const away = this.clubById(state, lastResult.awayId);
     const p = id => state.players.find(pl => pl.id === id);
+    const isUserHome = lastResult.homeId === state.userClubId;
+    const userWon = isUserHome ? lastResult.homeGoals > lastResult.awayGoals : lastResult.awayGoals > lastResult.homeGoals;
+    const userLost = isUserHome ? lastResult.homeGoals < lastResult.awayGoals : lastResult.awayGoals < lastResult.homeGoals;
+    const resultClass = userWon ? "result-win" : userLost ? "result-lose" : "result-draw";
+
+    let potmHtml = "";
+    if (lastResult.ratings) {
+      const allIds = Object.keys(lastResult.ratings);
+      let bestId = null, bestVal = -1;
+      allIds.forEach(id => { if (lastResult.ratings[id] > bestVal) { bestVal = lastResult.ratings[id]; bestId = id; } });
+      const potm = bestId ? p(bestId) : null;
+      if (potm) {
+        const potmClub = this.clubById(state, potm.clubId);
+        potmHtml = `
+          <div class="card potm-card">
+            <div class="potm-label">⭐ Pemain Terbaik Pertandingan</div>
+            <div class="potm-name">${potm.name}</div>
+            <div class="potm-sub">${potmClub.name} &middot; Rating ${bestVal.toFixed(1)}</div>
+          </div>`;
+      }
+    }
 
     const eventLines = lastResult.events.filter(e => e.type !== "chance").map(ev => {
       if (ev.type === "goal") {
         const scorer = p(ev.scorerId);
         const assist = ev.assistId ? p(ev.assistId) : null;
+        const scorerClubId = ev.team === "home" ? lastResult.homeId : lastResult.awayId;
+        const isUserGoal = scorerClubId === state.userClubId;
         return `<div class="event-line">
           <span class="event-minute">${ev.minute}'</span>
-          <span class="event-goal">⚽ Gol! ${scorer.name}${assist ? ` (assist: ${assist.name})` : ""} - ${ev.team === "home" ? home.name : away.name}</span>
+          <span class="event-goal ${isUserGoal ? "event-goal-user" : ""}">⚽ Gol! ${scorer.name}${assist ? ` (assist: ${assist.name})` : ""} - ${ev.team === "home" ? home.name : away.name}</span>
         </div>`;
       }
       if (ev.type === "yellow") {
@@ -255,13 +315,14 @@ const UI = {
 
     return `
       <h2 class="section-title" style="margin-top:14px;">Hasil Pertandingan</h2>
-      <div class="card">
+      <div class="card ${resultClass}">
         <div class="fixture-row">
           <div class="club"><span class="dot" style="background:${home.color}"></span>${home.name}</div>
           <div class="score">${lastResult.homeGoals} - ${lastResult.awayGoals}</div>
           <div class="club away">${away.name}<span class="dot" style="background:${away.color}"></span></div>
         </div>
       </div>
+      ${potmHtml}
       <h2 class="section-title">Jalannya Pertandingan</h2>
       <div class="card events-log">
         ${eventLines || '<div class="empty-state">Tidak ada peluang besar.</div>'}

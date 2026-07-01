@@ -27,3 +27,20 @@ function getStandings(clubs) {
     return a.name.localeCompare(b.name);
   });
 }
+
+// Form guide: hasil N pertandingan terakhir sebuah klub, urut dari terlama ke terbaru.
+// Return array berisi 'W' | 'D' | 'L'.
+function getClubForm(clubId, fixtures, n) {
+  const played = fixtures
+    .filter(f => f.played && (f.homeId === clubId || f.awayId === clubId))
+    .sort((a, b) => a.matchday - b.matchday);
+  const last = played.slice(-n);
+  return last.map(f => {
+    const isHome = f.homeId === clubId;
+    const gf = isHome ? f.homeGoals : f.awayGoals;
+    const ga = isHome ? f.awayGoals : f.homeGoals;
+    if (gf > ga) return "W";
+    if (gf < ga) return "L";
+    return "D";
+  });
+}

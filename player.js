@@ -28,6 +28,15 @@ function avgRating(p) {
   return p.match > 0 ? (p.ratingSum / p.match) : 0;
 }
 
+// Rating kekuatan keseluruhan klub (OVR), dihitung dari rata-rata 5 atribut
+// seluruh pemain di skuadnya. Dipakai untuk membantu pemain memilih klub.
+function clubOverall(players, clubId) {
+  const squad = players.filter(p => p.clubId === clubId);
+  if (!squad.length) return 0;
+  const sum = squad.reduce((s, p) => s + p.attack + p.defense + p.creativity + p.mental + p.stamina, 0);
+  return Math.round(sum / (squad.length * 5));
+}
+
 function getAwards(players, clubs) {
   const byClub = {};
   clubs.forEach(c => byClub[c.id] = c);

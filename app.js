@@ -72,6 +72,9 @@ function bindMainEvents() {
   const simBtn = document.getElementById("btn-sim-matchday");
   if (simBtn) simBtn.addEventListener("click", simulateMatchday);
 
+  const simToNextBtn = document.getElementById("btn-sim-to-next");
+  if (simToNextBtn) simToNextBtn.addEventListener("click", simulateToNextUserMatch);
+
   const finishBtn = document.getElementById("btn-finish-season");
   if (finishBtn) finishBtn.addEventListener("click", finishSeason);
 
@@ -110,13 +113,14 @@ function bindMainEvents() {
   }
 }
 
-function simulateMatchday() {
+// Simulasi satu matchday tanpa render/toast, dipakai baik untuk simulasi
+// satu-satu maupun simulasi cepat berantai. Mengembalikan userResult jika
+// klub milik pemain bertanding pada matchday ini, atau null jika tidak.
+function simulateMatchdayCore() {
   const fixturesToday = state.fixtures.filter(f => f.matchday === state.matchday && !f.played);
   if (!fixturesToday.length) {
     state.matchday++;
-    Storage.save(state);
-    render();
-    return;
+    return null;
   }
 
   let userResult = null;
@@ -138,16 +142,26 @@ function simulateMatchday() {
     applyMatchResultToPlayers(state.players, result, homePlayers.map(p => p.id), awayPlayers.map(p => p.id));
 
     if (f.homeId === state.userClubId || f.awayId === state.userClubId) {
-      userResult = { homeId: f.homeId, awayId: f.awayId, homeGoals: result.homeGoals, awayGoals: result.awayGoals, events: result.events };
+      userResult = {
+        homeId: f.homeId, awayId: f.awayId,
+        homeGoals: result.homeGoals, awayGoals: result.awayGoals,
+        events: result.events, ratings: result.ratings
+      };
     }
   });
+
+  state.matchday++;
+  return userResult;
+}
+
+function simulateMatchday() {
+  const userResult = simulateMatchdayCore();
 
   if (userResult) {
     state.lastSimResult = userResult;
     currentTab = "match";
   }
 
-  state.matchday++;
   Storage.save(state);
   render();
 
@@ -157,6 +171,33 @@ function simulateMatchday() {
     UI.toast(`${homeName} ${userResult.homeGoals} - ${userResult.awayGoals} ${awayName}`);
   } else {
     UI.toast("Matchday selesai.");
+  }
+}
+
+// Fitur QoL: simulasikan matchday berturut-turut secara diam-diam sampai
+// klub pemain kembali bertanding, atau musim berakhir (matchday > 38).
+function simulateToNextUserMatch() {
+  let userResult = null;
+  let safety = 0;
+  while (state.matchday <= 38 && !userResult && safety < 50) {
+    userResult = simulateMatchdayCore();
+    safety++;
+  }
+
+  if (userResult) {
+    state.lastSimResult = userResult;
+    currentTab = "match";
+  }
+
+  Storage.save(state);
+  render();
+
+  if (userResult) {
+    const homeName = UI.clubById(state, userResult.homeId).name;
+    const awayName = UI.clubById(state, userResult.awayId).name;
+    UI.toast(`${homeName} ${userResult.homeGoals} - ${userResult.awayGoals} ${awayName}`);
+  } else {
+    UI.toast("Musim selesai! Lihat hasil akhir.");
   }
 }
 
