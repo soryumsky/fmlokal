@@ -228,6 +228,8 @@ tbody tr { border-top: 1px solid var(--border); }
 .nav-btn .icon { font-size: 18px; }
 .nav-btn.active { color: var(--accent); }
 
+.muted-team { opacity: 0.45; }
+
 .events-log {
   max-height: 240px;
   overflow-y: auto;

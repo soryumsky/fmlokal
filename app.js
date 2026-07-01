@@ -9,20 +9,34 @@ let showTots = false;
 function newGameState() {
   const { clubs, players } = buildClubsAndPlayers();
   const fixtures = generateFixtures(clubs.map(c => c.id));
-  return {
+  const state = {
     userClubId: null,
     clubs, players, fixtures,
     season: 1,
     matchday: 1,
     history: [],
-    lastSimResult: null
+    lastSimResult: null,
+    lastSeasonStandingIds: null,
+    cup: null
   };
+  initCupForSeason(state);
+  return state;
 }
 
 function init() {
   const saved = Storage.load();
   if (saved) {
     state = saved;
+    // Kompatibilitas save lama (sebelum fitur CUP ditambahkan): siapkan CUP
+    // untuk musim yang sedang berjalan bila belum ada.
+    if (!state.cup) {
+      state.players.forEach(p => {
+        if (p.cupGoal === undefined) { p.cupGoal = 0; p.cupAssist = 0; p.cupMatch = 0; p.cupRatingSum = 0; }
+      });
+      if (state.lastSeasonStandingIds === undefined) state.lastSeasonStandingIds = null;
+      initCupForSeason(state);
+      Storage.save(state);
+    }
   } else {
     state = newGameState();
   }
@@ -40,6 +54,7 @@ function render() {
   let body = "";
   if (currentTab === "home") body = UI.renderHome(state);
   else if (currentTab === "league") body = UI.renderLeague(state);
+  else if (currentTab === "cup") body = UI.renderCup(state);
   else if (currentTab === "match") body = UI.renderMatch(state);
   else if (currentTab === "squad") body = UI.renderSquad(state, squadTab);
   else if (currentTab === "history") body = UI.renderHistory(state);
@@ -117,6 +132,19 @@ function bindMainEvents() {
 // satu-satu maupun simulasi cepat berantai. Mengembalikan userResult jika
 // klub milik pemain bertanding pada matchday ini, atau null jika tidak.
 function simulateMatchdayCore() {
+  // Jika sudah waktunya, mainkan dulu babak CUP yang disisipkan sebelum
+  // matchday liga ini (mis. Babak 16 Besar disisipkan setelah Match 8).
+  const cupStage = getCupStageDue(state);
+  if (cupStage) {
+    const cupUserResult = simulateCupStage(state);
+    state.lastCupStageLabel = CUP_STAGE_LABEL[cupStage];
+    if (cupUserResult) return cupUserResult;
+    // Tidak ada laga CUP milik klub pemain di babak ini; lanjut proses
+    // matchday liga di panggilan berikutnya (matchday tidak berubah).
+    return null;
+  }
+  state.lastCupStageLabel = null;
+
   const fixturesToday = state.fixtures.filter(f => f.matchday === state.matchday && !f.played);
   if (!fixturesToday.length) {
     state.matchday++;
@@ -155,6 +183,7 @@ function simulateMatchdayCore() {
 }
 
 function simulateMatchday() {
+  state.lastCupStageLabel = null;
   const userResult = simulateMatchdayCore();
 
   if (userResult) {
@@ -168,7 +197,11 @@ function simulateMatchday() {
   if (userResult) {
     const homeName = UI.clubById(state, userResult.homeId).name;
     const awayName = UI.clubById(state, userResult.awayId).name;
-    UI.toast(`${homeName} ${userResult.homeGoals} - ${userResult.awayGoals} ${awayName}`);
+    const prefix = userResult.isCup ? `[CUP - ${CUP_STAGE_LABEL[userResult.stage]}] ` : "";
+    const penaltyNote = userResult.isCup && userResult.penalty ? " (Adu Penalti)" : "";
+    UI.toast(`${prefix}${homeName} ${userResult.homeGoals} - ${userResult.awayGoals} ${awayName}${penaltyNote}`);
+  } else if (state.lastCupStageLabel) {
+    UI.toast(`Babak CUP ${state.lastCupStageLabel} telah dimainkan. Tekan lagi untuk lanjut matchday liga.`);
   } else {
     UI.toast("Matchday selesai.");
   }
@@ -195,20 +228,30 @@ function simulateToNextUserMatch() {
   if (userResult) {
     const homeName = UI.clubById(state, userResult.homeId).name;
     const awayName = UI.clubById(state, userResult.awayId).name;
-    UI.toast(`${homeName} ${userResult.homeGoals} - ${userResult.awayGoals} ${awayName}`);
+    const prefix = userResult.isCup ? `[CUP - ${CUP_STAGE_LABEL[userResult.stage]}] ` : "";
+    const penaltyNote = userResult.isCup && userResult.penalty ? " (Adu Penalti)" : "";
+    UI.toast(`${prefix}${homeName} ${userResult.homeGoals} - ${userResult.awayGoals} ${awayName}${penaltyNote}`);
   } else {
     UI.toast("Musim selesai! Lihat hasil akhir.");
   }
 }
 
 function finishSeason() {
-  const awards = getAwards(state.players, state.clubs);
+  // Simpan urutan klasemen akhir musim ini sebagai dasar seeding CUP musim depan.
+  const standingsOrder = getStandings(state.clubs).map(c => c.id);
+
+  const awards = getAwards(state.players, state.clubs, state.cup);
+  const cupAwards = getCupAwards(state);
   const p = id => state.players.find(pl => pl.id === id);
   const c = id => state.clubs.find(cl => cl.id === id);
   const champion = c(awards.champion);
   const goldenBoot = p(awards.goldenBoot);
   const topAssist = p(awards.topAssist);
   const ballonDor = p(awards.ballonDor);
+
+  const cupChampion = state.cup && state.cup.championId ? c(state.cup.championId) : null;
+  const cupTopScorer = cupAwards.cupTopScorer ? p(cupAwards.cupTopScorer) : null;
+  const cupTopAssist = cupAwards.cupTopAssist ? p(cupAwards.cupTopAssist) : null;
 
   state.history.push({
     season: state.season,
@@ -217,23 +260,33 @@ function finishSeason() {
     goldenBootGoals: goldenBoot.goal,
     topAssistName: topAssist.name,
     topAssistAssists: topAssist.assist,
-    ballonDorName: ballonDor.name
+    ballonDorName: ballonDor.name,
+    cupChampionName: cupChampion ? cupChampion.name : "-",
+    cupTopScorerName: cupTopScorer ? cupTopScorer.name : "-",
+    cupTopScorerGoals: cupTopScorer ? cupTopScorer.cupGoal : 0,
+    cupTopAssistName: cupTopAssist ? cupTopAssist.name : "-",
+    cupTopAssistAssists: cupTopAssist ? cupTopAssist.cupAssist : 0
   });
+
+  state.lastSeasonStandingIds = standingsOrder;
 
   // mulai musim baru: reset stat klub & pemain, fixture baru
   resetClubStats(state.clubs);
   state.players.forEach(p => {
     p.goal = 0; p.assist = 0; p.match = 0; p.ratingSum = 0; p.yc = 0; p.rc = 0;
+    p.cupGoal = 0; p.cupAssist = 0; p.cupMatch = 0; p.cupRatingSum = 0;
   });
   state.fixtures = generateFixtures(state.clubs.map(c => c.id));
   state.season++;
   state.matchday = 1;
   state.lastSimResult = null;
+  state.lastCupStageLabel = null;
+  initCupForSeason(state);
 
   Storage.save(state);
   currentTab = "history";
   render();
-  UI.toast(`Musim ${state.season - 1} selesai! Juara: ${champion.name}`);
+  UI.toast(`Musim ${state.season - 1} selesai! Juara Liga: ${champion.name}${cupChampion ? " · Juara CUP: " + cupChampion.name : ""}`);
 }
 
 document.addEventListener("DOMContentLoaded", init);

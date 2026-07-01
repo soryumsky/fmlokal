@@ -189,7 +189,8 @@ function buildClubsAndPlayers() {
         name, class: cls, role,
         pos: ROLE_TO_POS[role],
         attack: atk, defense: def, creativity: cre, mental: men, stamina: sta,
-        goal: 0, assist: 0, match: 0, ratingSum: 0, yc: 0, rc: 0
+        goal: 0, assist: 0, match: 0, ratingSum: 0, yc: 0, rc: 0,
+        cupGoal: 0, cupAssist: 0, cupMatch: 0, cupRatingSum: 0
       });
     }
   }

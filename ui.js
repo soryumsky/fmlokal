@@ -172,7 +172,7 @@ const UI = {
   renderAwardsSection(state) {
     const playedCount = state.fixtures.filter(f => f.played).length;
     if (playedCount < 10) return "";
-    const awards = getAwards(state.players, state.clubs);
+    const awards = getAwards(state.players, state.clubs, state.cup);
     const p = id => state.players.find(pl => pl.id === id);
     const c = id => state.clubs.find(cl => cl.id === id);
     const goldenBoot = p(awards.goldenBoot);
@@ -272,8 +272,14 @@ const UI = {
     const away = this.clubById(state, lastResult.awayId);
     const p = id => state.players.find(pl => pl.id === id);
     const isUserHome = lastResult.homeId === state.userClubId;
-    const userWon = isUserHome ? lastResult.homeGoals > lastResult.awayGoals : lastResult.awayGoals > lastResult.homeGoals;
-    const userLost = isUserHome ? lastResult.homeGoals < lastResult.awayGoals : lastResult.awayGoals < lastResult.homeGoals;
+    let userWon, userLost;
+    if (lastResult.isCup && lastResult.penalty) {
+      userWon = lastResult.winnerId === state.userClubId;
+      userLost = !userWon;
+    } else {
+      userWon = isUserHome ? lastResult.homeGoals > lastResult.awayGoals : lastResult.awayGoals > lastResult.homeGoals;
+      userLost = isUserHome ? lastResult.homeGoals < lastResult.awayGoals : lastResult.awayGoals < lastResult.homeGoals;
+    }
     const resultClass = userWon ? "result-win" : userLost ? "result-lose" : "result-draw";
 
     let potmHtml = "";
@@ -313,8 +319,15 @@ const UI = {
       return "";
     }).join("");
 
+    const cupBadge = lastResult.isCup
+      ? `<div style="text-align:center;font-size:11px;color:var(--accent);font-weight:700;margin-bottom:6px;">
+          🏆 CUP &middot; ${CUP_STAGE_LABEL[lastResult.stage]}${lastResult.penalty ? " &middot; Menang Adu Penalti" : ""}
+        </div>`
+      : "";
+
     return `
       <h2 class="section-title" style="margin-top:14px;">Hasil Pertandingan</h2>
+      ${cupBadge}
       <div class="card ${resultClass}">
         <div class="fixture-row">
           <div class="club"><span class="dot" style="background:${home.color}"></span>${home.name}</div>
@@ -378,15 +391,110 @@ const UI = {
         <div class="award-row"><span class="award-label">Top Skor</span><span>${h.goldenBootName} (${h.goldenBootGoals})</span></div>
         <div class="award-row"><span class="award-label">Top Assist</span><span>${h.topAssistName} (${h.topAssistAssists})</span></div>
         <div class="award-row"><span class="award-label">Ballon d'Or</span><span>${h.ballonDorName}</span></div>
+        ${h.cupChampionName ? `
+          <div style="height:1px;background:var(--border);margin:8px 0;"></div>
+          <div class="award-row"><span class="award-label">🏆 Juara CUP</span><span>${h.cupChampionName}</span></div>
+          <div class="award-row"><span class="award-label">Top Skor CUP</span><span>${h.cupTopScorerName}${h.cupTopScorerGoals ? ` (${h.cupTopScorerGoals})` : ""}</span></div>
+          <div class="award-row"><span class="award-label">Top Assist CUP</span><span>${h.cupTopAssistName}${h.cupTopAssistAssists ? ` (${h.cupTopAssistAssists})` : ""}</span></div>
+        ` : ""}
       </div>
     `).join("");
     return `<h2 class="section-title" style="margin-top:14px;">Riwayat Musim</h2>${rows}`;
+  },
+
+  renderCupMatchRow(state, m) {
+    if (!m) return "";
+    const home = this.clubById(state, m.homeId);
+    const away = this.clubById(state, m.awayId);
+    if (!home || !away) return "";
+    const isUser = m.homeId === state.userClubId || m.awayId === state.userClubId;
+    const scoreTxt = m.played ? `${m.homeGoals} - ${m.awayGoals}${m.penalty ? " (pen)" : ""}` : "vs";
+    return `
+      <div class="fixture-row ${isUser ? "user-club" : ""}" style="padding:7px 0;">
+        <div class="club ${m.played && m.winnerId === m.homeId ? "" : m.played ? "muted-team" : ""}">
+          <span class="dot" style="background:${home.color}"></span>${home.name}
+        </div>
+        <div class="score">${scoreTxt}</div>
+        <div class="club away ${m.played && m.winnerId === m.awayId ? "" : m.played ? "muted-team" : ""}">
+          ${away.name}<span class="dot" style="background:${away.color}"></span>
+        </div>
+      </div>`;
+  },
+
+  renderCup(state) {
+    const cup = state.cup;
+    if (!cup) return `<div class="empty-state">CUP belum tersedia.</div>`;
+
+    const champion = cup.championId ? this.clubById(state, cup.championId) : null;
+    const runnerUp = cup.runnerUpId ? this.clubById(state, cup.runnerUpId) : null;
+    const third = cup.thirdId ? this.clubById(state, cup.thirdId) : null;
+
+    let championHtml = "";
+    if (champion) {
+      championHtml = `
+        <div class="card" style="text-align:center;">
+          <div style="font-size:11px;color:var(--text-dim);">JUARA CUP MUSIM ${cup.season}</div>
+          <div style="font-size:20px;font-weight:800;margin-top:4px;">🏆 ${champion.name}</div>
+          ${runnerUp ? `<div style="font-size:12px;color:var(--text-dim);margin-top:4px;">Runner-up: ${runnerUp.name}</div>` : ""}
+          ${third ? `<div style="font-size:12px;color:var(--text-dim);">Juara 3: ${third.name}</div>` : ""}
+        </div>`;
+    }
+
+    const eliminatedClub = cup.playoff ? this.clubById(state, cup.playoff.eliminatedRank20) : null;
+    const playoffHtml = cup.playoff ? `
+      <h2 class="section-title">Kualifikasi Playoff (Peringkat 16-19)</h2>
+      <div class="card">
+        ${this.renderCupMatchRow(state, cup.playoff.semis[0])}
+        ${this.renderCupMatchRow(state, cup.playoff.semis[1])}
+        <div style="height:6px;border-top:1px dashed var(--border);margin:6px 0;"></div>
+        ${this.renderCupMatchRow(state, cup.playoff.final)}
+        <div style="font-size:11px;color:var(--text-dim);margin-top:8px;">
+          Peringkat 20 otomatis gugur: <b>${eliminatedClub ? eliminatedClub.name : "-"}</b>
+        </div>
+      </div>
+    ` : "";
+
+    const stageBlock = (title, arr) => {
+      if (!arr || !arr.length) return "";
+      return `<h2 class="section-title">${title}</h2><div class="card">${arr.map(m => this.renderCupMatchRow(state, m)).join("")}</div>`;
+    };
+
+    const cupAwards = getCupAwards(state);
+    const p = id => state.players.find(pl => pl.id === id);
+    const cs = cupAwards.cupTopScorer ? p(cupAwards.cupTopScorer) : null;
+    const ca = cupAwards.cupTopAssist ? p(cupAwards.cupTopAssist) : null;
+
+    const stageStatusHtml = cup.stage
+      ? `<div class="card" style="padding:10px 14px;font-size:12px;color:var(--text-dim);">
+          Babak berikutnya: <b style="color:var(--text);">${CUP_STAGE_LABEL[cup.stage]}</b>
+        </div>`
+      : "";
+
+    return `
+      <h2 class="section-title" style="margin-top:14px;">CUP</h2>
+      ${championHtml}
+      ${stageStatusHtml}
+      ${playoffHtml}
+      ${stageBlock("Babak 16 Besar", cup.r16)}
+      ${stageBlock("Babak 8 Besar", cup.qf)}
+      ${stageBlock("Babak 4 Besar", cup.sf)}
+      ${stageBlock("Perebutan Juara 3", cup.third ? [cup.third] : [])}
+      ${stageBlock("Final", cup.final ? [cup.final] : [])}
+      ${(cs || ca) ? `
+        <h2 class="section-title">Penghargaan CUP</h2>
+        <div class="card">
+          <div class="award-row"><span class="award-label">Top Skor CUP</span><span>${cs ? cs.name + " (" + cs.cupGoal + ")" : "-"}</span></div>
+          <div class="award-row"><span class="award-label">Top Assist CUP</span><span>${ca ? ca.name + " (" + ca.cupAssist + ")" : "-"}</span></div>
+        </div>
+      ` : ""}
+    `;
   },
 
   renderBottomNav(active) {
     const items = [
       ["home", "🏠", "Home"],
       ["league", "📊", "League"],
+      ["cup", "🥇", "CUP"],
       ["match", "⚽", "Match"],
       ["squad", "👥", "Squad"],
       ["history", "🏆", "History"],

@@ -37,14 +37,25 @@ function clubOverall(players, clubId) {
   return Math.round(sum / (squad.length * 5));
 }
 
-function getAwards(players, clubs) {
+function getAwards(players, clubs, cup) {
   const byClub = {};
   clubs.forEach(c => byClub[c.id] = c);
 
   const goldenBoot = [...players].sort((a, b) => b.goal - a.goal)[0];
   const topAssist = [...players].sort((a, b) => b.assist - a.assist)[0];
 
-  const ballonScore = p => p.goal * 2 + p.assist * 1.5 + avgRating(p) * (p.match || 1) * 0.3;
+  // Ballon d'Or menghitung performa liga DAN CUP: gol/assist CUP dihargai
+  // sedikit lebih tinggi (nilai prestise laga knockout), ditambah bonus
+  // untuk juara dan runner-up CUP musim ini.
+  const ballonScore = p => {
+    let score = p.goal * 2 + p.assist * 1.5 + avgRating(p) * (p.match || 1) * 0.3
+      + (p.cupGoal || 0) * 2.5 + (p.cupAssist || 0) * 1.8;
+    if (cup) {
+      if (cup.championId === p.clubId) score += 5;
+      else if (cup.runnerUpId === p.clubId) score += 2;
+    }
+    return score;
+  };
   const ballonDor = [...players].sort((a, b) => ballonScore(b) - ballonScore(a))[0];
 
   const champion = [...clubs].sort((a, b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga))[0];
