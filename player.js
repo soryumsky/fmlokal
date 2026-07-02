@@ -19,8 +19,8 @@ const KEY_ATTRS_BY_ROLE = {
 const KEY_ATTR_LABEL = {
   attack: "ATK", defense: "DEF", creativity: "CRE", mental: "MEN", stamina: "STA"
 };
-const ATTR_MIN = 1;
-const ATTR_MAX = 99;
+const ATTR_MIN = 50;
+const ATTR_MAX = 120;
 
 // Batasi nilai atribut ke rentang [ATTR_MIN, ATTR_MAX] dan bulatkan ke 1
 // desimal supaya tidak ada noise floating-point (mis. 82.20000000001).
@@ -50,13 +50,18 @@ function overallOf(p) {
 // yang wajar punya defense rendah) tidak dirugikan saat penentuan kelasnya -
 // kelas murni mencerminkan seberapa kuat kemampuan utama role-nya.
 // Dipakai ulang tiap kali atribut kunci berubah (per match & bonus juara)
-// supaya kelas (S/A/B/C/D) selalu merepresentasikan kekuatan pemain saat ini.
+// supaya kelas (E/D/C/B/A/S/SS/SSS) selalu merepresentasikan kekuatan
+// pemain saat ini. Rentang kelas mengikuti skala atribut 50-120:
+// 50-56 (E) 57-63 (D) 64-69 (C) 70-79 (B) 80-89 (A) 90-99 (S) 100-109 (SS) 110-120 (SSS)
 function classFromKeyOverall(v) {
-  if (v >= 95) return "S";
-  if (v >= 91) return "A";
-  if (v >= 88) return "B";
-  if (v >= 85) return "C";
-  return "D";
+  if (v >= 110) return "SSS";
+  if (v >= 100) return "SS";
+  if (v >= 90) return "S";
+  if (v >= 80) return "A";
+  if (v >= 70) return "B";
+  if (v >= 64) return "C";
+  if (v >= 57) return "D";
+  return "E";
 }
 
 // Cek ulang & update kelas pemain sesuai atribut kunci terbaru. Return

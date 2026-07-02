@@ -4,6 +4,7 @@ let state = null;
 let currentTab = "home";
 let squadTab = "club";
 let openClubId = null;
+let openPlayerId = null;
 let showTots = false;
 
 function newGameState() {
@@ -75,7 +76,8 @@ function render() {
 
   app.innerHTML = UI.renderTopbar(state) + `<main>${body}</main>` + UI.renderBottomNav(currentTab)
     + (openClubId ? UI.renderClubModal(state, openClubId) : "")
-    + (showTots ? UI.renderTotsModal(state) : "");
+    + (showTots ? UI.renderTotsModal(state) : "")
+    + (openPlayerId ? UI.renderPlayerModal(state, openPlayerId) : "");
   bindMainEvents();
 }
 
@@ -115,7 +117,8 @@ function bindMainEvents() {
   });
 
   document.querySelectorAll("[data-club-detail]").forEach(elm => {
-    elm.addEventListener("click", () => {
+    elm.addEventListener("click", (e) => {
+      e.stopPropagation();
       openClubId = elm.dataset.clubDetail;
       render();
     });
@@ -128,18 +131,34 @@ function bindMainEvents() {
     });
   });
 
-  document.querySelectorAll("[data-close-modal]").forEach(elm => {
-    elm.addEventListener("click", () => {
-      openClubId = null;
-      showTots = false;
+  document.querySelectorAll("[data-player-detail]").forEach(elm => {
+    elm.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openPlayerId = elm.dataset.playerDetail;
       render();
     });
   });
 
-  const modalBox = document.querySelector(".modal-box");
-  if (modalBox) {
-    modalBox.addEventListener("click", (e) => e.stopPropagation());
-  }
+  document.querySelectorAll("[data-close-modal]").forEach(elm => {
+    elm.addEventListener("click", () => {
+      openClubId = null;
+      showTots = false;
+      openPlayerId = null;
+      render();
+    });
+  });
+
+  document.querySelectorAll("[data-close-player-modal]").forEach(elm => {
+    elm.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openPlayerId = null;
+      render();
+    });
+  });
+
+  document.querySelectorAll(".modal-box").forEach(box => {
+    box.addEventListener("click", (e) => e.stopPropagation());
+  });
 }
 
 // Simulasi satu matchday tanpa render/toast, dipakai baik untuk simulasi

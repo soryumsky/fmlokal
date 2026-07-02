@@ -192,6 +192,11 @@ function buildClubsAndPlayers() {
         goal: 0, assist: 0, match: 0, ratingSum: 0, yc: 0, rc: 0,
         cupGoal: 0, cupAssist: 0, cupMatch: 0, cupRatingSum: 0
       });
+      // Kelas awal (E/D/C/B/A/S/SS/SSS) dihitung ulang dari rata-rata 3
+      // atribut kunci pemain sesuai skala kelas saat ini, supaya label kelas
+      // yang tampil di UI sejak awal permainan selalu konsisten dengan
+      // rentang kelas terbaru (bukan cuma label kasar S/A/B/C/D dari data mentah).
+      refreshPlayerClass(players[players.length - 1]);
     }
   }
   return { clubs, players };

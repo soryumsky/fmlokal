@@ -153,11 +153,14 @@ tbody tr { border-top: 1px solid var(--border); }
   border-radius: 999px;
   font-weight: 700;
 }
+.badge.SSS { background: linear-gradient(135deg,#ffd76a,#ff9d2f); color: #3a2200; box-shadow: 0 0 6px rgba(255,183,77,0.6); }
+.badge.SS { background: #a5238a; color: #ffdcf5; }
 .badge.S { background: #5b2e87; color: #f0d9ff; }
 .badge.A { background: #1d6f93; color: #d8f3ff; }
 .badge.B { background: #2f7a4f; color: #d8ffe2; }
 .badge.C { background: #8a6a1f; color: #fff3cf; }
 .badge.D { background: #555; color: #ddd; }
+.badge.E { background: #3a3a3a; color: #999; }
 
 .player-row {
   display: flex;
@@ -258,6 +261,14 @@ tbody tr { border-top: 1px solid var(--border); }
 .award-row:first-child { border-top: none; }
 .award-label { color: var(--text-dim); }
 .award-row-clickable { cursor: pointer; color: var(--accent); }
+
+.name-link {
+  cursor: pointer;
+  text-decoration: underline dotted;
+  text-decoration-color: rgba(255,255,255,0.25);
+  text-underline-offset: 2px;
+}
+.name-link:hover, .name-link:active { color: var(--accent); }
 .award-row-clickable span:last-child { color: var(--accent); font-weight: 600; }
 .award-row-clickable:active { opacity: 0.7; }
 
