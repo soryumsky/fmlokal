@@ -142,6 +142,8 @@ th { color: var(--text-dim); font-weight: 600; font-size: 11px; text-transform: 
 td.team-name { text-align: left; }
 tr.user-club { background: rgba(79,209,165,0.12); }
 tr.user-club td.team-name { color: var(--accent); font-weight: 700; }
+.player-row.user-club { background: rgba(79,209,165,0.12); border-radius: 8px; padding-left: 6px; padding-right: 6px; margin: 0 -6px; }
+.player-row.user-club .player-name { color: var(--accent); }
 tbody tr { border-top: 1px solid var(--border); }
 
 .rank { color: var(--text-dim); width: 22px; }

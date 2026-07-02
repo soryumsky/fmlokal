@@ -474,7 +474,7 @@ const UI = {
     const sorted = [...list].sort((a, b) => keyOverallOf(b) - keyOverallOf(a));
 
     const rows = sorted.map((p, i) => `
-      <div class="player-row">
+      <div class="player-row ${p.clubId === state.userClubId ? "user-club" : ""}">
         <div>
           <div class="player-name">${i + 1}. ${this.playerLink(p)} <span class="badge ${p.class}">${p.class}</span></div>
           <div class="player-role">${this.clubLink(this.clubById(state, p.clubId))} &middot; ${p.pos}</div>
