@@ -170,6 +170,17 @@ function clubOverall(players, clubId) {
   return Math.round(sum / (squad.length * 5));
 }
 
+// Rata-rata Key OVR (3 atribut kunci per pemain sesuai role) seluruh
+// skuad klub. Dipakai untuk perbandingan kekuatan klub yang lebih
+// merepresentasikan performa nyata (dipakai untuk kelas pemain) dibanding
+// OVR 5-atribut biasa.
+function clubKeyOverall(players, clubId) {
+  const squad = players.filter(p => p.clubId === clubId);
+  if (!squad.length) return 0;
+  const sum = squad.reduce((s, p) => s + keyOverallOf(p), 0);
+  return sum / squad.length;
+}
+
 function getAwards(players, clubs, cup) {
   const byClub = {};
   clubs.forEach(c => byClub[c.id] = c);

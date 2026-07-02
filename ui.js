@@ -88,6 +88,8 @@ const UI = {
     if (nextFixture) {
       const home = this.clubById(state, nextFixture.homeId);
       const away = this.clubById(state, nextFixture.awayId);
+      const homeKeyOvr = clubKeyOverall(state.players, home.id);
+      const awayKeyOvr = clubKeyOverall(state.players, away.id);
       fixtureHtml = `
         <div class="card">
           <h2 class="section-title" style="margin-top:0">Pertandingan Berikutnya &middot; MD${nextFixture.matchday}</h2>
@@ -95,6 +97,10 @@ const UI = {
             <div class="club"><span class="dot" style="background:${home.color}"></span>${this.clubLink(home)}</div>
             <div class="score">vs</div>
             <div class="club away">${this.clubLink(away)}<span class="dot" style="background:${away.color}"></span></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-dim);margin-top:2px;">
+            <span>Key OVR ${homeKeyOvr.toFixed(1)}</span>
+            <span>Key OVR ${awayKeyOvr.toFixed(1)}</span>
           </div>
         </div>`;
     }
@@ -560,6 +566,7 @@ const UI = {
       <tr class="club-row ${r.id === state.userClubId ? "user-club" : ""}" data-club-detail="${r.id}">
         <td class="rank">${i + 1}</td>
         <td class="team-name"><span class="dot" style="background:${r.color}"></span>${r.name}</td>
+        <td>${r.keyOvr.toFixed(1)}</td>
         <td>${r.seasons}</td>
         <td>${r.leaguePoints}</td>
         <td>${r.cupPoints}</td>
@@ -574,7 +581,7 @@ const UI = {
       <h2 class="section-title" style="margin-top:14px;">Ranking Klub</h2>
       <div class="card" style="overflow-x:auto;">
         <table>
-          <tr><th></th><th style="text-align:left;">Klub</th><th>Musim</th><th>Poin Liga</th><th>Poin CUP</th><th>Total</th></tr>
+          <tr><th></th><th style="text-align:left;">Klub</th><th>Key OVR</th><th>Musim</th><th>Poin Liga</th><th>Poin CUP</th><th>Total</th></tr>
           ${body}
         </table>
       </div>

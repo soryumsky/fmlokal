@@ -124,7 +124,8 @@ function getClubRankingTable(state) {
       leaguePoints: c.rankLeaguePoints || 0,
       cupPoints: c.rankCupPoints || 0,
       total: c.rankPoints || 0,
-      seasons: c.rankSeasons || 0
+      seasons: c.rankSeasons || 0,
+      keyOvr: clubKeyOverall(state.players, c.id)
     }))
     .sort((a, b) => {
       if (b.total !== a.total) return b.total - a.total;
