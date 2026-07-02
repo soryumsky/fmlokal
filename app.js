@@ -37,6 +37,18 @@ function init() {
       initCupForSeason(state);
       Storage.save(state);
     }
+    // Kompatibilitas save lama (sebelum fitur Ranking Klub ditambahkan):
+    // siapkan field poin ranking untuk tiap klub bila belum ada.
+    if (state.clubs.some(c => c.rankPoints === undefined)) {
+      state.clubs.forEach(c => {
+        c.rankLeaguePoints = c.rankLeaguePoints || 0;
+        c.rankCupPoints = c.rankCupPoints || 0;
+        c.rankPoints = c.rankPoints || 0;
+        c.rankSeasons = c.rankSeasons || 0;
+      });
+      state.rankingLog = state.rankingLog || [];
+      Storage.save(state);
+    }
   } else {
     state = newGameState();
   }
@@ -58,6 +70,7 @@ function render() {
   else if (currentTab === "match") body = UI.renderMatch(state);
   else if (currentTab === "squad") body = UI.renderSquad(state, squadTab);
   else if (currentTab === "trophies") body = UI.renderTrophies(state);
+  else if (currentTab === "ranking") body = UI.renderRanking(state);
   else if (currentTab === "history") body = UI.renderHistory(state);
 
   app.innerHTML = UI.renderTopbar(state) + `<main>${body}</main>` + UI.renderBottomNav(currentTab)
@@ -280,6 +293,10 @@ function finishSeason() {
   });
 
   state.lastSeasonStandingIds = standingsOrder;
+
+  // Hitung & akumulasikan poin Ranking Klub musim ini (dari peringkat Liga
+  // & pencapaian CUP) sebelum state.cup di-reset untuk musim berikutnya.
+  applySeasonRankingPoints(state, standingsOrder);
 
   // mulai musim baru: reset stat klub & pemain, fixture baru
   resetClubStats(state.clubs);

@@ -441,6 +441,55 @@ const UI = {
     `;
   },
 
+  renderRanking(state) {
+    const rows = getClubRankingTable(state);
+    const hasData = rows.some(r => r.seasons > 0);
+    const body = rows.map((r, i) => `
+      <tr class="club-row ${r.id === state.userClubId ? "user-club" : ""}" data-club-detail="${r.id}">
+        <td class="rank">${i + 1}</td>
+        <td class="team-name"><span class="dot" style="background:${r.color}"></span>${r.name}</td>
+        <td>${r.seasons}</td>
+        <td>${r.leaguePoints}</td>
+        <td>${r.cupPoints}</td>
+        <td><b>${r.total}</b></td>
+      </tr>
+    `).join("");
+
+    const emptyNote = hasData ? "" : `
+      <div class="empty-state">Belum ada poin ranking.<br>Selesaikan musim pertamamu untuk mulai mengumpulkan poin.</div>`;
+
+    return `
+      <h2 class="section-title" style="margin-top:14px;">Ranking Klub</h2>
+      <div class="card" style="overflow-x:auto;">
+        <table>
+          <tr><th></th><th style="text-align:left;">Klub</th><th>Musim</th><th>Poin Liga</th><th>Poin CUP</th><th>Total</th></tr>
+          ${body}
+        </table>
+      </div>
+      ${emptyNote}
+
+      <h2 class="section-title">Cara Poin Dihitung</h2>
+      <div class="card">
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:8px;">
+          Poin didapat tiap akhir musim, dari pencapaian di Liga (berdasarkan peringkat klasemen) dan CUP (berdasarkan babak tersingkir).
+        </div>
+        <div style="font-weight:700;font-size:12.5px;margin-bottom:4px;">Liga</div>
+        ${Object.keys(LEAGUE_RANK_POINTS).map(rank => `
+          <div class="award-row"><span class="award-label">${rank === "1" ? "Juara 1" : rank === "2" ? "Juara 2" : rank === "3" ? "Juara 3" : "Posisi " + rank}</span><span>${LEAGUE_RANK_POINTS[rank]} poin</span></div>
+        `).join("")}
+        <div style="height:1px;background:var(--border);margin:10px 0;"></div>
+        <div style="font-weight:700;font-size:12.5px;margin-bottom:4px;">CUP</div>
+        <div class="award-row"><span class="award-label">Juara 1</span><span>${CUP_TIER_POINTS.champion} poin</span></div>
+        <div class="award-row"><span class="award-label">Juara 2</span><span>${CUP_TIER_POINTS.runnerUp} poin</span></div>
+        <div class="award-row"><span class="award-label">Juara 3</span><span>${CUP_TIER_POINTS.third} poin</span></div>
+        <div class="award-row"><span class="award-label">Juara 4</span><span>${CUP_TIER_POINTS.fourth} poin</span></div>
+        <div class="award-row"><span class="award-label">Posisi 5-8</span><span>${CUP_TIER_POINTS.qf} poin</span></div>
+        <div class="award-row"><span class="award-label">Posisi 9-16</span><span>${CUP_TIER_POINTS.r16} poin</span></div>
+        <div class="award-row"><span class="award-label">Posisi 17-20</span><span>Tidak dapat poin</span></div>
+      </div>
+    `;
+  },
+
   renderCupMatchRow(state, m) {
     if (!m) return "";
     const home = this.clubById(state, m.homeId);
@@ -537,6 +586,7 @@ const UI = {
       ["match", "⚽", "Match"],
       ["squad", "👥", "Squad"],
       ["trophies", "🏅", "Trophy"],
+      ["ranking", "📈", "Ranking"],
       ["history", "🏆", "History"],
     ];
     return `<div class="bottom-nav">
