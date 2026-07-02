@@ -471,7 +471,7 @@ const UI = {
     `).join("");
 
     const list = filter === "all" ? state.players : state.players.filter(p => p.pos === filter);
-    const sorted = [...list].sort((a, b) => overallOf(b) - overallOf(a));
+    const sorted = [...list].sort((a, b) => keyOverallOf(b) - keyOverallOf(a));
 
     const rows = sorted.map((p, i) => `
       <div class="player-row">
@@ -479,7 +479,7 @@ const UI = {
           <div class="player-name">${i + 1}. ${this.playerLink(p)} <span class="badge ${p.class}">${p.class}</span></div>
           <div class="player-role">${this.clubLink(this.clubById(state, p.clubId))} &middot; ${p.pos}</div>
         </div>
-        <div class="player-stats">🏆${p.ballonDorCount || 0} &middot; <b>OVR ${overallOf(p).toFixed(1)}</b></div>
+        <div class="player-stats">🏆${p.ballonDorCount || 0} &middot; <b>KEY OVR ${keyOverallOf(p).toFixed(1)}</b></div>
       </div>
     `).join("");
 
