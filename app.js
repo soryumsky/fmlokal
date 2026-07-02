@@ -3,6 +3,7 @@
 let state = null;
 let currentTab = "home";
 let squadTab = "club";
+let playersPosFilter = "all";
 let openClubId = null;
 let openPlayerId = null;
 let showTots = false;
@@ -50,6 +51,12 @@ function init() {
       state.rankingLog = state.rankingLog || [];
       Storage.save(state);
     }
+    // Kompatibilitas save lama (sebelum fitur tab Players ditambahkan):
+    // siapkan penghitung Ballon d'Or per pemain bila belum ada.
+    if (state.players.some(p => p.ballonDorCount === undefined)) {
+      state.players.forEach(p => { p.ballonDorCount = p.ballonDorCount || 0; });
+      Storage.save(state);
+    }
   } else {
     state = newGameState();
   }
@@ -70,6 +77,7 @@ function render() {
   else if (currentTab === "cup") body = UI.renderCup(state);
   else if (currentTab === "match") body = UI.renderMatch(state);
   else if (currentTab === "squad") body = UI.renderSquad(state, squadTab);
+  else if (currentTab === "players") body = UI.renderPlayers(state, playersPosFilter);
   else if (currentTab === "trophies") body = UI.renderTrophies(state);
   else if (currentTab === "ranking") body = UI.renderRanking(state);
   else if (currentTab === "history") body = UI.renderHistory(state);
@@ -112,6 +120,13 @@ function bindMainEvents() {
   document.querySelectorAll("[data-squadtab]").forEach(elm => {
     elm.addEventListener("click", () => {
       squadTab = elm.dataset.squadtab;
+      render();
+    });
+  });
+
+  document.querySelectorAll("[data-posfilter]").forEach(elm => {
+    elm.addEventListener("click", () => {
+      playersPosFilter = elm.dataset.posfilter;
       render();
     });
   });
@@ -282,6 +297,7 @@ function finishSeason() {
   const goldenBoot = p(awards.goldenBoot);
   const topAssist = p(awards.topAssist);
   const ballonDor = p(awards.ballonDor);
+  if (ballonDor) ballonDor.ballonDorCount = (ballonDor.ballonDorCount || 0) + 1;
 
   const cupChampion = state.cup && state.cup.championId ? c(state.cup.championId) : null;
   const cupTopScorer = cupAwards.cupTopScorer ? p(cupAwards.cupTopScorer) : null;

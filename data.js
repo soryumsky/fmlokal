@@ -190,7 +190,8 @@ function buildClubsAndPlayers() {
         pos: ROLE_TO_POS[role],
         attack: atk, defense: def, creativity: cre, mental: men, stamina: sta,
         goal: 0, assist: 0, match: 0, ratingSum: 0, yc: 0, rc: 0,
-        cupGoal: 0, cupAssist: 0, cupMatch: 0, cupRatingSum: 0
+        cupGoal: 0, cupAssist: 0, cupMatch: 0, cupRatingSum: 0,
+        ballonDorCount: 0
       });
       // Kelas awal (E/D/C/B/A/S/SS/SSS) dihitung ulang dari rata-rata 3
       // atribut kunci pemain sesuai skala kelas saat ini, supaya label kelas

@@ -463,6 +463,33 @@ const UI = {
       <div class="card">${rows}</div>`;
   },
 
+  renderPlayers(state, posFilter) {
+    const filter = posFilter || "all";
+    const POS_LABEL = { all: "Semua", GK: "GK", DEF: "DEF", MID: "MID", ATT: "ATT" };
+    const filters = ["all", "GK", "DEF", "MID", "ATT"].map(f => `
+      <div class="tab-mini ${filter === f ? "active" : ""}" data-posfilter="${f}">${POS_LABEL[f]}</div>
+    `).join("");
+
+    const list = filter === "all" ? state.players : state.players.filter(p => p.pos === filter);
+    const sorted = [...list].sort((a, b) => overallOf(b) - overallOf(a));
+
+    const rows = sorted.map((p, i) => `
+      <div class="player-row">
+        <div>
+          <div class="player-name">${i + 1}. ${this.playerLink(p)} <span class="badge ${p.class}">${p.class}</span></div>
+          <div class="player-role">${this.clubLink(this.clubById(state, p.clubId))} &middot; ${p.pos}</div>
+        </div>
+        <div class="player-stats">🏆${p.ballonDorCount || 0} &middot; <b>OVR ${overallOf(p).toFixed(1)}</b></div>
+      </div>
+    `).join("");
+
+    return `
+      <h2 class="section-title" style="margin-top:14px;">Players</h2>
+      <div class="tabs-mini">${filters}</div>
+      <div class="card">${rows || '<div class="empty-state">Tidak ada pemain.</div>'}</div>
+    `;
+  },
+
   renderHistory(state) {
     if (!state.history.length) {
       return `<div class="empty-state">Belum ada riwayat musim.<br>Selesaikan musim pertamamu untuk melihat hasilnya di sini.</div>`;
@@ -670,6 +697,7 @@ const UI = {
       ["cup", "🥇", "CUP"],
       ["match", "⚽", "Match"],
       ["squad", "👥", "Squad"],
+      ["players", "🌟", "Players"],
       ["trophies", "🏅", "Trophy"],
       ["ranking", "📈", "Ranking"],
       ["history", "🏆", "History"],

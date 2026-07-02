@@ -214,10 +214,11 @@ tbody tr { border-top: 1px solid var(--border); }
   border-top: 1px solid var(--border);
   padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
   z-index: 10;
+  overflow-x: auto;
 }
 .nav-btn {
-  flex: 1;
-  min-width: 0;
+  flex: 1 0 auto;
+  min-width: 44px;
   background: none;
   border: none;
   color: var(--text-dim);
